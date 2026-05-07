@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Start of the Shift · Shopee Ops</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700;9..40,800;9..40,900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+/* ───────────────────── TOKENS ───────────────────── */
+:root{
+  --sh:#EE4D2D;--sh-l:#FF6B47;--sh-d:#C73D22;
+  --sh-glow:rgba(238,77,45,.28);--sh-sub:rgba(238,77,45,.08);
+  --bg0:#070707;--bg1:#101010;--bg2:#181818;--bg3:#202020;--bg4:#2A2A2A;--bg5:#343434;
+  --b0:rgba(255,255,255,.04);--b1:rgba(255,255,255,.08);--b2:rgba(255,255,255,.13);--ba:rgba(238,77,45,.22);
+  --t1:#F2F2F2;--t2:#9A9A9A;--t3:#555;
+  --green:#22C55E;--green-g:rgba(34,197,94,.18);
+  --amber:#F59E0B;--amber-g:rgba(245,158,11,.18);
+  --red:#EF4444;--red-g:rgba(239,68,68,.18);
+  --blue:#3B82F6;--blue-g:rgba(59,130,246,.15);
+  --r:10px;--rl:16px;--rxl:22px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg0);color:var(--t1);min-height:100vh;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");opacity:.018}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg1)}::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:99px}::-webkit-scrollbar-thumb:hover{background:var(--sh)}
+
+/* ───────────────────── NAV ───────────────────── */
+.nav{position:sticky;top:0;z-index:200;height:60px;background:rgba(7,7,7,.88);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid var(--b0);padding:0 28px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.nav-brand{display:flex;align-items:center;gap:11px;cursor:pointer}
+.nav-logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--sh),var(--sh-d));display:flex;align-items:center;justify-content:center;font-size:17px;box-shadow:0 0 14px var(--sh-glow);flex-shrink:0}
+.nav-name{font-size:14px;font-weight:800;letter-spacing:-.3px;line-height:1}
+.nav-sub{font-size:11px;color:var(--t3);letter-spacing:.2px;margin-top:1px}
+.nav-acts{display:flex;align-items:center;gap:8px}
+.nbtn{padding:7px 18px;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;transition:all .18s;border:none;font-family:inherit}
+.nbtn-ghost{background:transparent;color:var(--t2);border:1px solid var(--b1)}
+.nbtn-ghost:hover{background:var(--bg3);color:var(--t1)}
+.nbtn-primary{background:var(--sh);color:#fff}
+.nbtn-primary:hover{background:var(--sh-l);box-shadow:0 0 18px var(--sh-glow);transform:translateY(-1px)}
+
+/* ───────────────────── VIEWS ───────────────────── */
+.view{display:none;position:relative;z-index:1}
+.view.active{display:block}
+
+/* ───────────────────── LOGIN ───────────────────── */
+.login-wrap{min-height:calc(100vh - 60px);display:flex;align-items:center;justify-content:center;padding:40px 20px;background:radial-gradient(ellipse 60% 50% at 15% 55%,rgba(238,77,45,.06) 0%,transparent 70%),radial-gradient(ellipse 50% 40% at 85% 20%,rgba(238,77,45,.04) 0%,transparent 60%)}
+.login-card{width:100%;max-width:460px;background:var(--bg2);border:1px solid var(--b1);border-radius:var(--rxl);padding:44px 40px;box-shadow:0 24px 80px rgba(0,0,0,.6),0 0 0 1px var(--b0);animation:slideUp .4s ease}
+.login-head{text-align:center;margin-bottom:32px}
+.login-badge{display:inline-flex;align-items:center;gap:6px;background:var(--sh-sub);border:1px solid var(--ba);border-radius:99px;padding:5px 14px;font-size:11px;font-weight:700;color:var(--sh);letter-spacing:.8px;text-transform:uppercase;margin-bottom:16px}
+.login-title{font-size:26px;font-weight:900;letter-spacing:-.8px;margin-bottom:6px;line-height:1.1}
+.login-desc{color:var(--t2);font-size:13px;line-height:1.5}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.fg{margin-bottom:16px}
+.fl{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.9px;color:var(--t2);margin-bottom:7px}
+.fi,.fsel{width:100%;padding:11px 14px;background:var(--bg3);border:1px solid var(--b1);border-radius:var(--r);color:var(--t1);font-size:14px;font-family:inherit;outline:none;transition:border-color .18s,box-shadow .18s;appearance:none;-webkit-appearance:none}
+.fi:focus,.fsel:focus{border-color:var(--sh);box-shadow:0 0 0 3px var(--sh-glow)}
+.fsel{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px}
+.fsel option{background:var(--bg3)}
+.btn-full{width:100%;padding:13px;background:linear-gradient(135deg,var(--sh),var(--sh-d));color:#fff;border:none;border-radius:var(--r);font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;transition:all .2s;letter-spacing:-.2px;margin-top:6px;box-shadow:0 4px 18px var(--sh-glow)}
+.btn-full:hover{transform:translateY(-2px);box-shadow:0 8px 28px var(--sh-glow)}
+.btn-full:active{transform:translateY(0)}
+.login-footer{text-align:center;margin-top:18px;font-size:12px;color:var(--t3)}
+
+/* ───────────────────── FORM ───────────────────── */
+.form-wrap{max-width:720px;margin:0 auto;padding:36px 24px 80px;animation:slideUp .35s ease}
+.user-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:11px 16px;background:var(--bg2);border:1px solid var(--b1);border-radius:var(--r);margin-bottom:20px;font-size:13px}
+.user-tag{display:flex;align-items:center;gap:5px;color:var(--t2)}
+.user-tag strong{color:var(--t1)}
+.cad-badge{display:inline-flex;align-items:center;padding:2px 10px;background:var(--sh-sub);border:1px solid var(--ba);border-radius:99px;font-size:11px;font-weight:800;color:var(--sh);letter-spacing:.5px}
+.sep{color:var(--t3)}
+.form-h1{font-size:22px;font-weight:900;letter-spacing:-.5px;margin-bottom:4px}
+.form-h2{color:var(--t2);font-size:13px}
+.prog-wrap{margin:20px 0}
+.prog-info{display:flex;justify-content:space-between;font-size:12px;color:var(--t2);margin-bottom:6px}
+.prog-bar{height:5px;background:var(--bg4);border-radius:99px;overflow:hidden}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--sh),var(--sh-l));border-radius:99px;transition:width .3s ease}
+.sec-title{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1.4px;color:var(--t3);margin:28px 0 10px;padding-bottom:8px;border-bottom:1px solid var(--b0)}
+.cl-list{display:flex;flex-direction:column;gap:6px}
+
+/* Checklist item */
+.cl-item{display:flex;align-items:flex-start;gap:14px;padding:14px 18px;background:var(--bg2);border:1px solid var(--b0);border-radius:var(--r);cursor:pointer;transition:all .18s;user-select:none}
+.cl-item:hover{background:var(--bg3);border-color:var(--b1)}
+.cl-item.checked{background:rgba(34,197,94,.04);border-color:rgba(34,197,94,.18)}
+.cl-item.has-upload{border-radius:var(--r) var(--r) 0 0;margin-bottom:0}
+.cl-box{width:21px;height:21px;min-width:21px;border:2px solid var(--b2);border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:var(--bg4);transition:all .18s;margin-top:1px}
+.cl-item.checked .cl-box{background:var(--green);border-color:var(--green)}
+.cl-check{opacity:0;transform:scale(.4);transition:all .18s}
+.cl-item.checked .cl-check{opacity:1;transform:scale(1)}
+.cl-ico{font-size:18px;width:24px;text-align:center;flex-shrink:0;margin-top:1px}
+.cl-info{flex:1}
+.cl-name{font-size:13px;font-weight:600;margin-bottom:3px;line-height:1.3}
+.cl-freq{font-size:11px;color:var(--t3);margin-bottom:5px}
+.freq-tag{display:inline-block;padding:2px 7px;border-radius:99px;font-size:10px;font-weight:700;letter-spacing:.3px;background:var(--sh-sub);color:var(--sh);border:1px solid var(--ba)}
+
+/* Link button on items */
+.item-link{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);border-radius:99px;font-size:10px;font-weight:700;color:var(--blue);text-decoration:none;cursor:pointer;transition:all .15s;margin-top:2px}
+.item-link:hover{background:rgba(59,130,246,.2);border-color:rgba(59,130,246,.4);color:#fff}
+
+/* Upload area for Ajuste de Ponto */
+.upload-wrap{background:rgba(59,130,246,.05);border:1px solid rgba(59,130,246,.15);border-top:none;border-radius:0 0 var(--r) var(--r);padding:12px 16px;margin-bottom:2px}
+.upload-hint{font-size:11px;font-weight:700;color:var(--blue);margin-bottom:8px;display:flex;align-items:center;gap:5px}
+.upload-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:var(--bg3);border:1px dashed rgba(59,130,246,.35);border-radius:var(--r);font-size:12px;color:var(--t2);cursor:pointer;transition:all .15s;font-family:inherit;font-weight:500}
+.upload-btn:hover{background:var(--bg4);border-color:var(--blue);color:var(--t1)}
+.upload-preview{margin-top:10px}
+.upload-preview img{max-width:100%;max-height:180px;border-radius:var(--r);border:1px solid var(--b1);display:block}
+.upload-name{font-size:10px;color:var(--green);margin-top:4px;font-weight:600}
+
+/* Obs */
+.obs-area{width:100%;padding:12px 14px;background:var(--bg3);border:1px solid var(--b1);border-radius:var(--r);color:var(--t1);font-size:13px;font-family:inherit;resize:vertical;min-height:90px;outline:none;transition:border-color .18s,box-shadow .18s}
+.obs-area:focus{border-color:var(--sh);box-shadow:0 0 0 3px var(--sh-glow)}
+.already-done{background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.2);border-radius:var(--r);padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:10px;font-size:13px}
+.dot-live{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 1.8s infinite;flex-shrink:0}
+
+/* ───────────────────── DASHBOARD ───────────────────── */
+.dash-wrap{max-width:1300px;margin:0 auto;padding:32px 24px 80px;animation:fadeIn .4s ease}
+.dash-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:12px}
+.dash-title{font-size:26px;font-weight:900;letter-spacing:-.7px;margin-bottom:3px}
+.dash-sub{color:var(--t2);font-size:13px}
+.filter-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:14px 18px;background:var(--bg2);border:1px solid var(--b1);border-radius:var(--rl);margin-bottom:24px}
+.fl-label{font-size:12px;font-weight:600;color:var(--t3);white-space:nowrap}
+.f-sel{padding:7px 30px 7px 10px;background:var(--bg3);border:1px solid var(--b1);border-radius:var(--r);color:var(--t1);font-size:12px;font-family:inherit;outline:none;cursor:pointer;transition:border-color .18s;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;appearance:none;-webkit-appearance:none}
+.f-sel:hover,.f-sel:focus{border-color:var(--sh)}
+.f-sel option{background:var(--bg3)}
+.f-div{width:1px;height:20px;background:var(--b1)}
+.btn-clear{padding:7px 14px;background:transparent;color:var(--t2);border:1px solid var(--b1);border-radius:var(--r);font-size:12px;font-family:inherit;cursor:pointer;transition:all .18s}
+.btn-clear:hover{background:var(--bg3);color:var(--t1)}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+@media(max-width:900px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:500px){.kpi-grid{grid-template-columns:1fr}}
+.kpi-card{background:var(--bg2);border:1px solid var(--b0);border-radius:var(--rl);padding:22px;transition:all .22s;cursor:default;position:relative;overflow:hidden}
+.kpi-card::after{content:'';position:absolute;inset:0;border-radius:var(--rl);background:linear-gradient(135deg,rgba(238,77,45,.03),transparent);pointer-events:none}
+.kpi-card:hover{border-color:var(--ba);transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,.35)}
+.kpi-ico{font-size:22px;margin-bottom:10px}
+.kpi-val{font-family:'DM Mono',monospace;font-size:34px;font-weight:500;letter-spacing:-1.5px;line-height:1;margin-bottom:5px}
+.kpi-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t2)}
+.kpi-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;margin-top:8px;padding:3px 8px;border-radius:99px}
+.up{background:var(--green-g);color:var(--green)}.dn{background:var(--red-g);color:var(--red)}.neu{background:var(--amber-g);color:var(--amber)}
+.gsh{color:var(--sh);text-shadow:0 0 18px var(--sh-glow)}.gg{color:var(--green);text-shadow:0 0 18px var(--green-g)}
+.charts-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
+.c12{grid-column:span 12}.c8{grid-column:span 8}.c6{grid-column:span 6}.c4{grid-column:span 4}
+@media(max-width:1000px){.c8,.c6,.c4{grid-column:span 12}}
+.chart-card{background:var(--bg2);border:1px solid var(--b0);border-radius:var(--rl);padding:22px;transition:border-color .22s}
+.chart-card:hover{border-color:var(--b1)}
+.ct{font-size:14px;font-weight:800;letter-spacing:-.3px;margin-bottom:3px}
+.ci{font-size:11px;color:var(--t2);margin-bottom:18px;line-height:1.4}
+.rank-list{display:flex;flex-direction:column;gap:2px;margin-top:4px}
+.rank-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--r);transition:background .15s}
+.rank-row:hover{background:var(--bg3)}
+.rn{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0}
+.r1{background:rgba(255,215,0,.18);color:#FFD700}.r2{background:rgba(200,200,200,.15);color:#C8C8C8}.r3{background:rgba(205,127,50,.18);color:#CD7F32}.ro{background:var(--bg4);color:var(--t3)}
+.r-info{flex:1;min-width:0}
+.r-name{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.r-meta{font-size:10px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.r-bar{width:80px;height:5px;background:var(--bg4);border-radius:99px;overflow:hidden;flex-shrink:0}
+.r-fill{height:100%;border-radius:99px}
+.r-pct{font-family:'DM Mono',monospace;font-size:11px;font-weight:500;width:34px;text-align:right;flex-shrink:0}
+
+/* Empty state */
+.empty-state{text-align:center;padding:60px 20px}
+.empty-state .e-ico{font-size:52px;margin-bottom:16px;opacity:.4}
+.empty-state .e-title{font-size:18px;font-weight:700;margin-bottom:8px;color:var(--t2)}
+.empty-state .e-sub{font-size:13px;color:var(--t3);line-height:1.6;max-width:400px;margin:0 auto}
+
+.footer{text-align:center;padding:24px;color:var(--t3);font-size:11px;border-top:1px solid var(--b0);margin-top:32px}
+.toast{position:fixed;bottom:24px;right:24px;z-index:999;background:var(--bg3);border:1px solid var(--green);border-radius:var(--rl);padding:14px 20px;font-size:13px;font-weight:600;box-shadow:0 8px 32px rgba(0,0,0,.5);animation:slideUp .3s ease;display:flex;align-items:center;gap:8px;max-width:360px}
+.toast.err{border-color:var(--red)}.toast.warn{border-color:var(--amber)}
+
+@keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{display:inline-block;animation:spin .8s linear infinite}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-brand" onclick="goHome()">
+    <div class="nav-logo">
+      <!-- Shopee Logo SVG -->
+      <svg width="22" height="22" viewBox="0 0 60 62" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Handle -->
+        <path d="M17 27C17 13 43 13 43 27" stroke="white" stroke-width="5.5" stroke-linecap="round"/>
+        <!-- Bag body -->
+        <rect x="9" y="25" width="42" height="33" rx="5" fill="white"/>
+        <!-- Eyes -->
+        <circle cx="22.5" cy="38.5" r="3.5" fill="#EE4D2D"/>
+        <circle cx="37.5" cy="38.5" r="3.5" fill="#EE4D2D"/>
+        <!-- Smile -->
+        <path d="M20.5 47.5 Q30 54.5 39.5 47.5" stroke="#EE4D2D" stroke-width="2.8" stroke-linecap="round" fill="none"/>
+      </svg>
+    </div>
+    <div>
+      <div class="nav-name">Shopee Fulfillment</div>
+      <div class="nav-sub">Start of the Shift</div>
+    </div>
+  </div>
+  <div class="nav-acts" id="nav-acts"></div>
+</nav>
+
+<!-- ══════════ VIEW: LOGIN ══════════ -->
+<div id="v-login" class="view active">
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="login-head">
+        <div class="login-badge">🟠 Shopee Fulfillment · SoS</div>
+        <div class="login-title">Start of the Shift</div>
+        <div class="login-desc">Identifique-se para iniciar o check diário do turno.</div>
+      </div>
+
+      <!-- E-mail -->
+      <div class="fg">
+        <label class="fl">E-mail corporativo</label>
+        <input class="fi" id="l-email" type="email" placeholder="seu.nome@shopee.com" autocomplete="off">
+      </div>
+
+      <!-- CAD + Turno lado a lado -->
+      <div class="form-row">
+        <div class="fg" style="margin-bottom:0">
+          <label class="fl">CAD</label>
+          <select class="fsel" id="l-cad">
+            <option value="">Selecione…</option>
+            <option>BRFPE</option>
+            <option>BRFSP</option>
+            <option>BRFGO</option>
+            <option>BRFMG</option>
+            <option>BRFRS</option>
+          </select>
+        </div>
+        <div class="fg" style="margin-bottom:0">
+          <label class="fl">Turno</label>
+          <select class="fsel" id="l-turno">
+            <option value="">Selecione…</option>
+            <option>T1</option>
+            <option>T2</option>
+            <option>T3</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Área -->
+      <div class="fg" style="margin-top:16px">
+        <label class="fl">Área de atuação</label>
+        <select class="fsel" id="l-area">
+          <option value="">Selecione a área…</option>
+          <option>Inbound</option>
+          <option>Picking</option>
+          <option>Checking</option>
+          <option>Qualidade</option>
+          <option>Inventário</option>
+        </select>
+      </div>
+
+      <button class="btn-full" onclick="startForm()">Iniciar preenchimento →</button>
+      <div class="login-footer">Dados sincronizados automaticamente com o Google Sheets.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ VIEW: FORM ══════════ -->
+<div id="v-form" class="view">
+  <div class="form-wrap">
+    <div class="user-bar" id="user-bar"></div>
+    <div id="already-msg"></div>
+
+    <div style="margin-bottom:24px">
+      <div class="form-h1">Check do Turno</div>
+      <div class="form-h2" id="form-date"></div>
+    </div>
+
+    <div class="prog-wrap">
+      <div class="prog-info"><span id="prog-txt">0 de 14 itens</span><span id="prog-pct">0%</span></div>
+      <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+    </div>
+
+    <div class="sec-title">📋 Rotinas Diárias</div>
+    <div class="cl-list" id="cl-daily"></div>
+
+    <div class="sec-title">📅 Rotinas Semanais</div>
+    <div class="cl-list" id="cl-weekly"></div>
+
+    <div class="sec-title" style="margin-top:28px">💬 Observações (opcional)</div>
+    <textarea class="obs-area" id="obs" placeholder="Pendências, intercorrências ou destaques do turno…"></textarea>
+
+    <button class="btn-full" style="margin-top:20px" id="submit-btn" onclick="submitForm()">Registrar turno ✓</button>
+  </div>
+</div>
+
+<!-- ══════════ VIEW: DASHBOARD ══════════ -->
+<div id="v-dash" class="view">
+  <div class="dash-wrap">
+    <div class="dash-head">
+      <div>
+        <div class="dash-title">Dashboard — Start of the Shift</div>
+        <div class="dash-sub">Shopee Fulfillment · Rotinas supervisoras</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="nbtn nbtn-primary" onclick="showView('v-login')">+ Novo Registro</button>
+      </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filter-bar">
+      <span class="fl-label">Filtros:</span>
+      <select class="f-sel" id="f-period" onchange="renderDash()">
+        <option value="7">Últimos 7 dias</option>
+        <option value="30" selected>Últimos 30 dias</option>
+        <option value="90">Últimos 90 dias</option>
+        <option value="0">Todo período</option>
+      </select>
+      <div class="f-div"></div>
+      <select class="f-sel" id="f-cad" onchange="renderDash()">
+        <option value="">Todos os CADs</option>
+        <option>BRFPE</option><option>BRFSP</option><option>BRFGO</option><option>BRFMG</option><option>BRFRS</option>
+      </select>
+      <select class="f-sel" id="f-email" onchange="renderDash()"><option value="">Todos os supervisores</option></select>
+      <select class="f-sel" id="f-area"  onchange="renderDash()"><option value="">Todas as áreas</option></select>
+      <select class="f-sel" id="f-turno" onchange="renderDash()">
+        <option value="">Todos os turnos</option>
+        <option>T1</option><option>T2</option><option>T3</option>
+      </select>
+      <button class="btn-clear" onclick="clearFilters()">✕ Limpar</button>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-grid">
+      <div class="kpi-card"><div class="kpi-ico">📊</div><div class="kpi-val gsh" id="k-total">0</div><div class="kpi-lbl">Total de registros</div><div class="kpi-badge neu" id="k-tsub">no período</div></div>
+      <div class="kpi-card"><div class="kpi-ico">✅</div><div class="kpi-val gg" id="k-rate">—</div><div class="kpi-lbl">Taxa de cumprimento</div><div class="kpi-badge" id="k-rsub">—</div></div>
+      <div class="kpi-card"><div class="kpi-ico">👤</div><div class="kpi-val" id="k-sups">0</div><div class="kpi-lbl">Supervisores ativos</div><div class="kpi-badge neu">no período</div></div>
+      <div class="kpi-card"><div class="kpi-ico">🏆</div><div class="kpi-val" id="k-best" style="font-size:20px;letter-spacing:-.3px">—</div><div class="kpi-lbl">Melhor supervisor</div><div class="kpi-badge up" id="k-bsub">—</div></div>
+    </div>
+
+    <!-- Container principal -->
+    <div id="dash-empty" class="empty-state" style="display:none">
+      <div class="e-ico">📋</div>
+      <div class="e-title">Sem registros no período selecionado</div>
+      <div class="e-sub">Os dados aparecerão aqui assim que os supervisores começarem a preencher o formulário de Start of the Shift.</div>
+    </div>
+
+    <div id="dash-content">
+      <div class="charts-grid">
+        <div class="chart-card c12">
+          <div class="ct">📈 Evolução Mensal de Registros</div>
+          <div class="ci">Volume de registros por mês e taxa média de aderência. Barras = quantidade · Linha = % cumprimento</div>
+          <canvas id="ch-evo" height="80"></canvas>
+        </div>
+        <div class="chart-card c4">
+          <div class="ct">🎯 Realizado × Não Realizado</div>
+          <div class="ci">Percentual geral de itens concluídos sobre o total esperado no período.</div>
+          <div style="position:relative;max-width:220px;margin:0 auto">
+            <canvas id="ch-donut" height="220"></canvas>
+            <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none">
+              <div style="font-family:'DM Mono',monospace;font-size:28px;font-weight:500;color:var(--green);line-height:1" id="donut-pct">—</div>
+              <div style="font-size:10px;color:var(--t3);margin-top:2px">cumprido</div>
+            </div>
+          </div>
+        </div>
+        <div class="chart-card c4">
+          <div class="ct">🕐 Cumprimento por Turno</div>
+          <div class="ci">Taxa média de conclusão por turno operacional (T1 · T2 · T3).</div>
+          <canvas id="ch-turno" height="220"></canvas>
+        </div>
+        <div class="chart-card c4">
+          <div class="ct">📍 Cumprimento por Área</div>
+          <div class="ci">Aderência comparativa entre as áreas operacionais do CD.</div>
+          <canvas id="ch-area" height="220"></canvas>
+        </div>
+        <div class="chart-card c6">
+          <div class="ct">🏭 Registros por CAD</div>
+          <div class="ci">Quantidade de registros e taxa de cumprimento por centro de distribuição no período.</div>
+          <canvas id="ch-cad" height="200"></canvas>
+        </div>
+        <div class="chart-card c6">
+          <div class="ct">🥇 Top Performers</div>
+          <div class="ci">Supervisores com maior taxa de cumprimento no período.</div>
+          <div class="rank-list" id="rank-top"></div>
+        </div>
+        <div class="chart-card c6">
+          <div class="ct">⚠️ Atenção — Menor Aderência</div>
+          <div class="ci">Supervisores com menor taxa ou registros — requerem atenção do time de gestão.</div>
+          <div class="rank-list" id="rank-bot"></div>
+        </div>
+        <div class="chart-card c12">
+          <div class="ct">📋 Cumprimento por Item do Checklist</div>
+          <div class="ci">% de registros em que cada item foi marcado como feito. 🟢 ≥80% · 🟡 ≥60% · 🔴 &lt;60%</div>
+          <canvas id="ch-items" height="90"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      Dados sincronizados com Google Sheets · Gerado em <span id="ft-date"></span> · Shopee Fulfillment
+    </div>
+  </div>
+</div>
+
+<!-- FILE INPUT OCULTO (Ajuste de Ponto) -->
+<input type="file" id="file-ajustePonto" accept="image/*" style="display:none" onchange="previewImg(this,'ajustePonto')">
+
+<script>
+/* ══════════════════════════════════════════════════
+   CONFIGURAÇÃO — URL DO GOOGLE SHEETS (hardcoded)
+══════════════════════════════════════════════════ */
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbwR3gxJGQEhYoWHH6kb9uM95jZTX5te1Xx8ngFIC2wL0C124MNAEekgqsKeYF3EXld7/exec';
+
+/* ══════════════════════════════════════════════════
+   CONSTANTES
+══════════════════════════════════════════════════ */
+const ITEMS = [
+  {k:'dds',          lbl:'Aplicação do DDS',                   ico:'📋', freq:'Diário'},
+  {k:'fastStart',    lbl:'Fast Start',                         ico:'🚀', freq:'Diário'},
+  {k:'idle',         lbl:'Verificar Pendência Idle (turno ant)',ico:'🔍', freq:'Diário'},
+  {k:'formABS',      lbl:'Formulário de ABS',                  ico:'📝', freq:'Diário',
+    link:'https://script.google.com/a/macros/shopee.com/s/AKfycbw08Ncl6QfJdcMX8a6V4oA8UD4zKGoRt6qAgZg0SThcwJbflSFPQcVt7jDya_6RzcGC/exec'},
+  {k:'ajustePonto',  lbl:'Ajuste de Ponto',                    ico:'⏱️', freq:'Diário',  hasUpload:true},
+  {k:'entrevistaABS',lbl:'Entrevista de ABS',                  ico:'🎙️', freq:'Diário',
+    link:'https://docs.google.com/forms/d/e/1FAIpQLScuDJ5YoHEx4akwIvq-KhmA76TYCc_ovgEyTRNd3_-EqEck3Q/viewform'},
+  {k:'feedQual',     lbl:'Feedback da Qualidade',              ico:'⭐', freq:'Diário',
+    link:'https://r4ntu.github.io/Feedback_Full/'},
+  {k:'feedComp',     lbl:'Feedback Comportamental (RH)',       ico:'🤝', freq:'Diário',
+    link:'https://docs.google.com/forms/d/e/1FAIpQLSc8gbEUNFn2L2OLpMNKW5QxvkbgkyYbWp5_tw--XMVteQZbtg/viewform'},
+  {k:'feedTop',      lbl:'Feedback Positivo — TopPerformance', ico:'🏆', freq:'1×/semana'},
+  {k:'opa',          lbl:'OPA',                                ico:'🎯', freq:'4×/semana',
+    link:'https://docs.google.com/forms/d/e/1FAIpQLSf0M8b0iDtgfJwQBpvpPzqdEHHVEsd1NvA404m_XzT0oCAT3Q/viewform'},
+  {k:'safetyWalker', lbl:'Safety Walker',                      ico:'🦺', freq:'1×/semana',
+    link:'https://docs.google.com/forms/d/e/1FAIpQLSegilKB8mNA7dAtZ8i1snseLc4lcKhlccvZ0h66UbrUUppq4w/viewform'},
+  {k:'cuidadoAtivo', lbl:'Cuidado Ativo',                      ico:'💙', freq:'1×/semana',
+    link:'https://docs.google.com/forms/d/e/1FAIpQLSfjha7tbnWLEU-GhsQupAySIP1zIJNCdGgvR1dnem4PPxIE8A/viewform'},
+  {k:'liderProc',    lbl:'Líder no Processo',                  ico:'👔', freq:'1×/semana',
+    link:'https://docs.google.com/spreadsheets/d/1fLjJU7c63hreNCkgCgOSxEBNrLf9K5NNpQvVSrvjFag/edit?gid=1911213720#gid=1911213720'},
+  {k:'checkEquip',   lbl:'Check de Equipamentos',              ico:'🔧', freq:'1×/semana'},
+];
+
+const ITEM_KEYS   = ITEMS.map(i => i.k);
+const DAILY_ITEMS = ITEMS.filter(i => i.freq === 'Diário');
+const WEEK_ITEMS  = ITEMS.filter(i => i.freq !== 'Diário');
+const TURNOS      = ['T1','T2','T3'];
+const AREAS       = ['Inbound','Picking','Checking','Qualidade','Inventário'];
+const CADS        = ['BRFPE','BRFSP','BRFGO','BRFMG','BRFRS'];
+const LS_DATA     = 'sos_v3'; // nova chave → limpa dados antigos automaticamente
+
+/* ══════════════════════════════════════════════════
+   ESTADO
+══════════════════════════════════════════════════ */
+let currentUser = null;
+let records     = [];
+let charts      = {};
+const checked   = new Set();
+
+/* ══════════════════════════════════════════════════
+   STORAGE  (sem dados de amostra)
+══════════════════════════════════════════════════ */
+function loadRecs() {
+  const s = localStorage.getItem(LS_DATA);
+  records = s ? JSON.parse(s) : [];
+}
+function saveRecs() { localStorage.setItem(LS_DATA, JSON.stringify(records)); }
+
+/* ══════════════════════════════════════════════════
+   SYNC → GOOGLE SHEETS
+══════════════════════════════════════════════════ */
+async function syncToSheets(rec) {
+  try {
+    await fetch(SHEETS_URL, {
+      method:  'POST',
+      mode:    'no-cors',
+      headers: {'Content-Type':'application/json'},
+      body:    JSON.stringify(rec),
+    });
+    return true;
+  } catch(e) {
+    console.warn('[SOS] Sheets sync error:', e);
+    return false;
+  }
+}
+
+/* ══════════════════════════════════════════════════
+   VIEW MANAGER
+══════════════════════════════════════════════════ */
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+  renderNav(id);
+  if (id === 'v-dash') { populateFilters(); renderDash(); }
+}
+function goHome() { showView('v-login'); }
+
+function renderNav(vid) {
+  const el = document.getElementById('nav-acts');
+  if (vid === 'v-login')
+    el.innerHTML = `<button class="nbtn nbtn-primary" onclick="showView('v-dash')">📊 Dashboard</button>`;
+  else if (vid === 'v-form')
+    el.innerHTML = `<button class="nbtn nbtn-ghost" onclick="showView('v-dash')">📊 Dashboard</button><button class="nbtn nbtn-ghost" onclick="showView('v-login')">Trocar usuário</button>`;
+  else
+    el.innerHTML = `<button class="nbtn nbtn-ghost" onclick="exportCSV()">⬇ Exportar CSV</button>`;
+}
+
+/* ══════════════════════════════════════════════════
+   LOGIN
+══════════════════════════════════════════════════ */
+function startForm() {
+  const email = document.getElementById('l-email').value.trim();
+  const cad   = document.getElementById('l-cad').value;
+  const turno = document.getElementById('l-turno').value;
+  const area  = document.getElementById('l-area').value;
+  if (!email || !cad || !turno || !area || !email.includes('@')) {
+    shake(document.querySelector('.login-card')); return;
+  }
+  currentUser = {email, cad, turno, area};
+  buildForm();
+  showView('v-form');
+}
+function shake(el){el.style.transform='translateX(7px)';setTimeout(()=>el.style.transform='translateX(-7px)',80);setTimeout(()=>el.style.transform='',160);}
+
+/* ══════════════════════════════════════════════════
+   FORM BUILDER
+══════════════════════════════════════════════════ */
+function buildForm() {
+  const {email, cad, turno, area} = currentUser;
+  const today = new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+  document.getElementById('user-bar').innerHTML = `
+    <span class="cad-badge">${cad}</span>
+    <span class="sep">·</span>
+    <div class="user-tag">👤 <strong>${email}</strong></div>
+    <span class="sep">·</span>
+    <div class="user-tag">🕐 <strong>${turno}</strong></div>
+    <span class="sep">·</span>
+    <div class="user-tag">📍 <strong>${area}</strong></div>`;
+
+  document.getElementById('form-date').textContent = today.charAt(0).toUpperCase()+today.slice(1);
+
+  const ds  = new Date().toISOString().split('T')[0];
+  const ex  = records.find(r => r.email===email && r.date===ds);
+  document.getElementById('already-msg').innerHTML = ex
+    ? `<div class="already-done"><div class="dot-live"></div><span>Você já preencheu hoje. Pode atualizar o registro abaixo.</span></div>` : '';
+
+  checked.clear();
+  renderSection('cl-daily',  DAILY_ITEMS);
+  renderSection('cl-weekly', WEEK_ITEMS);
+  document.getElementById('obs').value = '';
+  updateProg();
+}
+
+/* ── Renderizar seção de itens ── */
+function renderSection(cid, items) {
+  let html = '';
+  items.forEach(it => {
+    const linkHtml = it.link
+      ? `<a href="${it.link}" target="_blank" class="item-link" onclick="event.stopPropagation()">🔗 Abrir formulário</a>`
+      : '';
+
+    html += `
+      <div class="cl-item${it.hasUpload?' has-upload':''}" id="ci-${it.k}" onclick="toggle('${it.k}')">
+        <div class="cl-box">
+          <svg class="cl-check" width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="cl-ico">${it.ico}</div>
+        <div class="cl-info">
+          <div class="cl-name">${it.lbl}</div>
+          <div class="cl-freq"><span class="freq-tag">${it.freq}</span></div>
+          ${linkHtml}
+        </div>
+      </div>`;
+
+    if (it.hasUpload) {
+      html += `
+        <div class="upload-wrap" id="upwrap-${it.k}">
+          <div class="upload-hint">📸 Inserir print do ponto sem pendências de ajustes</div>
+          <button class="upload-btn" onclick="document.getElementById('file-${it.k}').click()">
+            <span id="upload-lbl-${it.k}">📎 Clique para anexar a imagem</span>
+          </button>
+          <input type="file" id="file-${it.k}" accept="image/*" style="display:none" onchange="previewImg(this,'${it.k}')">
+          <div id="preview-${it.k}" class="upload-preview"></div>
+        </div>`;
+    }
+  });
+  document.getElementById(cid).innerHTML = html;
+}
+
+/* ── Preview da imagem de print ── */
+function previewImg(input, key) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('preview-'+key).innerHTML =
+      `<img src="${e.target.result}"><div class="upload-name">✅ ${file.name}</div>`;
+    document.getElementById('upload-lbl-'+key).textContent = '✅ ' + file.name;
+  };
+  reader.readAsDataURL(file);
+}
+
+function toggle(k) {
+  checked.has(k) ? checked.delete(k) : checked.add(k);
+  document.getElementById('ci-'+k).classList.toggle('checked', checked.has(k));
+  updateProg();
+}
+function updateProg() {
+  const done=checked.size, total=ITEMS.length, pct=Math.round(done/total*100);
+  document.getElementById('prog-txt').textContent = `${done} de ${total} itens concluídos`;
+  document.getElementById('prog-pct').textContent = pct+'%';
+  document.getElementById('prog-fill').style.width = pct+'%';
+}
+
+/* ══════════════════════════════════════════════════
+   SUBMIT
+══════════════════════════════════════════════════ */
+async function submitForm() {
+  const {email, cad, turno, area} = currentUser;
+  const ds  = new Date().toISOString().split('T')[0];
+  const items = {};
+  ITEMS.forEach(it => { items[it.k] = checked.has(it.k); });
+  const done = checked.size;
+  const rate = +(done / ITEMS.length).toFixed(3);
+
+  // Remove duplicata do mesmo dia e prepend
+  records = records.filter(r => !(r.email===email && r.date===ds));
+  const rec = {
+    id:   Math.random().toString(36).slice(2,9),
+    ts:   new Date().toISOString(),
+    date: ds,
+    email, cad, turno, area, items,
+    obs:  document.getElementById('obs').value,
+    rate,
+  };
+  records.unshift(rec);
+  saveRecs();
+
+  const btn = document.getElementById('submit-btn');
+  btn.innerHTML = '<span class="spin">⏳</span> Sincronizando…';
+  btn.disabled  = true;
+
+  const synced = await syncToSheets(rec);
+
+  showToast(`✅ Turno registrado — ${done}/${ITEMS.length} itens (${Math.round(rate*100)}%)${synced?' · Sheets ✓':''}`);
+  btn.innerHTML = 'Registrar turno ✓';
+  btn.disabled  = false;
+  checked.clear();
+  setTimeout(() => showView('v-dash'), 600);
+}
+
+/* ══════════════════════════════════════════════════
+   FILTROS
+══════════════════════════════════════════════════ */
+function populateFilters() {
+  const emails = [...new Set(records.map(r=>r.email))].sort();
+  const areas  = [...new Set(records.map(r=>r.area))].sort();
+  document.getElementById('f-email').innerHTML = `<option value="">Todos os supervisores</option>` + emails.map(e=>`<option>${e}</option>`).join('');
+  document.getElementById('f-area').innerHTML  = `<option value="">Todas as áreas</option>`        + areas.map(a=>`<option>${a}</option>`).join('');
+}
+function clearFilters() {
+  document.getElementById('f-period').value = '30';
+  ['f-cad','f-email','f-area','f-turno'].forEach(id => document.getElementById(id).value='');
+  renderDash();
+}
+function getFiltered() {
+  const days  = +document.getElementById('f-period').value;
+  const cad   = document.getElementById('f-cad').value;
+  const email = document.getElementById('f-email').value;
+  const area  = document.getElementById('f-area').value;
+  const turno = document.getElementById('f-turno').value;
+  const cut   = days>0 ? new Date(Date.now()-days*86400000).toISOString().split('T')[0] : '0000-00-00';
+  return records.filter(r =>
+    r.date >= cut &&
+    (!cad   || r.cad   === cad  ) &&
+    (!email || r.email === email) &&
+    (!area  || r.area  === area ) &&
+    (!turno || r.turno === turno)
+  );
+}
+
+/* ══════════════════════════════════════════════════
+   DASHBOARD
+══════════════════════════════════════════════════ */
+function renderDash() {
+  const recs = getFiltered();
+  const empty = recs.length === 0;
+  document.getElementById('dash-empty').style.display   = empty ? 'block' : 'none';
+  document.getElementById('dash-content').style.display = empty ? 'none'  : 'block';
+  renderKPIs(recs);
+  if (!empty) {
+    chartEvo(recs); chartDonut(recs); chartTurnos(recs);
+    chartAreas(recs); chartCAD(recs); buildRanks(recs); chartItems(recs);
+  }
+  document.getElementById('ft-date').textContent = new Date().toLocaleDateString('pt-BR');
+}
+
+/* KPIs */
+function renderKPIs(recs) {
+  const n    = recs.length;
+  const avgR = n ? avg(recs.map(r=>r.rate)) : 0;
+  const sups = new Set(recs.map(r=>r.email)).size;
+  const supR = {};
+  recs.forEach(r => { if(!supR[r.email]) supR[r.email]=[]; supR[r.email].push(r.rate); });
+  let bEmail='—',bRate=0;
+  Object.entries(supR).forEach(([e,rs])=>{ const m=avg(rs); if(m>bRate){bRate=m;bEmail=e;} });
+  const bName = bEmail==='—'?'—':bEmail.split('@')[0].replace('.',' ').replace(/\b\w/g,c=>c.toUpperCase());
+
+  setText('k-total', n.toLocaleString('pt-BR'));
+  setText('k-rate',  n ? Math.round(avgR*100)+'%' : '—');
+  setText('k-sups',  sups);
+  setText('k-best',  bName);
+
+  const tr = avgR>=.8?'up':avgR>=.6?'neu':'dn';
+  const tl = avgR>=.8?'↑ Ótimo':avgR>=.6?'~ Regular':'↓ Atenção';
+  document.getElementById('k-tsub').textContent = `${n} no período`;
+  const rb = document.getElementById('k-rsub'); rb.className='kpi-badge '+(n?tr:'neu'); rb.textContent = n?tl:'sem dados';
+  document.getElementById('k-bsub').textContent = bRate>0?Math.round(bRate*100)+'%':'—';
+}
+
+/* Charts */
+function chartEvo(recs) {
+  const m={};
+  recs.forEach(r=>{ const k=r.date.slice(0,7); if(!m[k])m[k]={c:0,rs:[]}; m[k].c++; m[k].rs.push(r.rate); });
+  const ks=Object.keys(m).sort();
+  const labels=ks.map(k=>{ const[y,mo]=k.split('-'); return new Date(+y,+mo-1,1).toLocaleDateString('pt-BR',{month:'short',year:'2-digit'}); });
+  mkChart('ch-evo',{type:'bar',data:{labels,datasets:[
+    {type:'bar', label:'Registros',   data:ks.map(k=>m[k].c), backgroundColor:'rgba(238,77,45,.35)',borderColor:'rgba(238,77,45,.7)',borderWidth:1.5,borderRadius:4,yAxisID:'y'},
+    {type:'line',label:'Aderência %', data:ks.map(k=>Math.round(avg(m[k].rs)*100)),borderColor:'#22C55E',backgroundColor:'rgba(34,197,94,.08)',borderWidth:2,pointRadius:4,pointBackgroundColor:'#22C55E',tension:.4,fill:true,yAxisID:'y2'},
+  ]},options:{plugins:{legend:{labels:{color:'#9A9A9A',boxWidth:12,font:{size:11}}},tooltip:{callbacks:{label:ctx=>ctx.datasetIndex===1?ctx.dataset.label+': '+ctx.parsed.y+'%':ctx.dataset.label+': '+ctx.parsed.y}}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555'}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555'},title:{display:true,text:'Registros',color:'#555',font:{size:11}}},y2:{position:'right',grid:{display:false},ticks:{color:'#555',callback:v=>v+'%'},min:0,max:100,title:{display:true,text:'Aderência %',color:'#555',font:{size:11}}}}}});
+}
+
+function chartDonut(recs) {
+  const pct = recs.length ? Math.round(avg(recs.map(r=>r.rate))*100) : 0;
+  document.getElementById('donut-pct').textContent = pct+'%';
+  mkChart('ch-donut',{type:'doughnut',data:{labels:['Realizado','Não realizado'],datasets:[{data:[pct,100-pct],backgroundColor:['rgba(34,197,94,.8)','rgba(255,255,255,.06)'],borderWidth:0,hoverOffset:4}]},options:{cutout:'72%',plugins:{legend:{position:'bottom',labels:{color:'#9A9A9A',boxWidth:10,font:{size:11},padding:12}},tooltip:{callbacks:{label:ctx=>ctx.label+': '+ctx.parsed+'%'}}}}});
+}
+
+function chartTurnos(recs) {
+  const map={}; TURNOS.forEach(t=>{ map[t]=[]; });
+  recs.forEach(r=>{ if(map[r.turno]) map[r.turno].push(r.rate); });
+  const data=TURNOS.map(t=>map[t].length?Math.round(avg(map[t])*100):0);
+  mkChart('ch-turno',{type:'bar',data:{labels:TURNOS,datasets:[{label:'Aderência %',data,backgroundColor:['rgba(59,130,246,.75)','rgba(245,158,11,.75)','rgba(168,85,247,.75)'],borderRadius:6}]},options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.parsed.y+'%'}}},scales:{x:{grid:{display:false},ticks:{color:'#9A9A9A',font:{size:14,weight:'bold'}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555',callback:v=>v+'%'},min:0,max:100}}}});
+}
+
+function chartAreas(recs) {
+  const as=[...new Set(recs.map(r=>r.area))].sort();
+  const map={}; as.forEach(a=>{ map[a]=[]; });
+  recs.forEach(r=>{ if(map[r.area]) map[r.area].push(r.rate); });
+  const data=as.map(a=>Math.round(avg(map[a])*100));
+  mkChart('ch-area',{type:'bar',data:{labels:as,datasets:[{label:'Aderência %',data,backgroundColor:data.map(v=>v>=80?'rgba(34,197,94,.65)':v>=60?'rgba(245,158,11,.65)':'rgba(239,68,68,.65)'),borderRadius:6}]},options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.parsed.x+'%'}}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555',callback:v=>v+'%'},min:0,max:100},y:{grid:{display:false},ticks:{color:'#555'}}}}});
+}
+
+function chartCAD(recs) {
+  const cadList = [...new Set(recs.map(r=>r.cad).filter(Boolean))].sort();
+  if (!cadList.length) { mkChart('ch-cad',{type:'bar',data:{labels:[],datasets:[]},options:{}}); return; }
+  const map = {};
+  cadList.forEach(c => { map[c] = {c:0, rs:[]}; });
+  recs.forEach(r => { if(r.cad && map[r.cad]) { map[r.cad].c++; map[r.cad].rs.push(r.rate); } });
+  const counts = cadList.map(c => map[c].c);
+  const rates  = cadList.map(c => map[c].rs.length ? Math.round(avg(map[c].rs)*100) : 0);
+  const cadColors = {
+    BRFPE:'rgba(238,77,45,.75)', BRFSP:'rgba(59,130,246,.75)',
+    BRFGO:'rgba(168,85,247,.75)', BRFMG:'rgba(34,197,94,.75)', BRFRS:'rgba(245,158,11,.75)'
+  };
+  mkChart('ch-cad',{
+    type:'bar',
+    data:{
+      labels: cadList,
+      datasets:[
+        { label:'Registros',    data:counts, backgroundColor: cadList.map(c=>cadColors[c]||'rgba(255,255,255,.2)'), borderRadius:5, yAxisID:'y' },
+        { label:'Aderência %',  data:rates,  type:'line', borderColor:'#F2F2F2', backgroundColor:'rgba(242,242,242,.06)',
+          borderWidth:2, pointRadius:5, pointBackgroundColor:cadList.map(c=>cadColors[c]||'#fff'),
+          pointBorderColor:'#fff', pointBorderWidth:1.5, tension:.35, fill:true, yAxisID:'y2' },
+      ]
+    },
+    options:{
+      plugins:{
+        legend:{labels:{color:'#9A9A9A',boxWidth:12,font:{size:11}}},
+        tooltip:{callbacks:{label:ctx=>ctx.datasetIndex===1?ctx.dataset.label+': '+ctx.parsed.y+'%':ctx.dataset.label+': '+ctx.parsed.y}}
+      },
+      scales:{
+        x:{ grid:{display:false}, ticks:{color:'#9A9A9A',font:{size:12,weight:'bold'}} },
+        y:{ grid:{color:'rgba(255,255,255,.04)'}, ticks:{color:'#555'}, title:{display:true,text:'Registros',color:'#555',font:{size:10}} },
+        y2:{ position:'right', grid:{display:false}, ticks:{color:'#555',callback:v=>v+'%'}, min:0, max:100,
+             title:{display:true,text:'Aderência %',color:'#555',font:{size:10}} },
+      }
+    }
+  });
+}
+
+function buildRanks(recs) {
+  const sr={};
+  recs.forEach(r=>{ if(!sr[r.email])sr[r.email]={rs:[],c:0,cad:r.cad||''}; sr[r.email].rs.push(r.rate); sr[r.email].c++; });
+  const ranked=Object.entries(sr).map(([email,{rs,c,cad}])=>({email,cad,pct:Math.round(avg(rs)*100),c})).sort((a,b)=>b.pct-a.pct);
+  drawRank('rank-top', ranked.slice(0,6), true);
+  drawRank('rank-bot', [...ranked].sort((a,b)=>a.pct-b.pct).slice(0,6), false);
+}
+function drawRank(id, items, top) {
+  if(!items.length){ document.getElementById(id).innerHTML='<div style="color:var(--t3);font-size:13px;padding:16px 0">Nenhum dado no período.</div>'; return; }
+  document.getElementById(id).innerHTML = items.map((it,i)=>{
+    const cls=i===0?'r1':i===1?'r2':i===2?'r3':'ro';
+    const name=it.email.split('@')[0].replace('.',' ').replace(/\b\w/g,c=>c.toUpperCase());
+    const fill=top?`linear-gradient(90deg,var(--green),rgba(34,197,94,.4))`:it.pct>=60?`var(--amber)`:`var(--red)`;
+    const pc=it.pct>=80?'var(--green)':it.pct>=60?'var(--amber)':'var(--red)';
+    return `<div class="rank-row">
+      <div class="rn ${cls}">${i+1}</div>
+      <div class="r-info">
+        <div class="r-name">${name}</div>
+        <div class="r-meta">${it.email} · ${it.cad} · ${it.c} reg.</div>
+      </div>
+      <div class="r-bar"><div class="r-fill" style="width:${it.pct}%;background:${fill}"></div></div>
+      <div class="r-pct" style="color:${pc}">${it.pct}%</div>
+    </div>`;
+  }).join('');
+}
+
+function chartItems(recs) {
+  const pts = ITEMS.map(it=>({
+    lbl: it.ico+' '+it.lbl,
+    pct: recs.length ? Math.round(recs.filter(r=>r.items[it.k]).length/recs.length*100) : 0
+  })).sort((a,b)=>b.pct-a.pct);
+  mkChart('ch-items',{type:'bar',data:{labels:pts.map(i=>i.lbl),datasets:[{label:'Cumprimento %',data:pts.map(i=>i.pct),backgroundColor:pts.map(i=>i.pct>=80?'rgba(34,197,94,.65)':i.pct>=60?'rgba(245,158,11,.65)':'rgba(239,68,68,.65)'),borderRadius:5}]},options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.parsed.x+'%'}}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555',callback:v=>v+'%'},min:0,max:100},y:{grid:{display:false},ticks:{color:'#9A9A9A',font:{size:11}}}}}});
+}
+
+function mkChart(id,cfg) {
+  if(charts[id]) charts[id].destroy();
+  Chart.defaults.color       = '#9A9A9A';
+  Chart.defaults.borderColor = 'rgba(255,255,255,.05)';
+  Chart.defaults.font.family = "'DM Sans',system-ui,sans-serif";
+  const ctx=document.getElementById(id);
+  if(!ctx) return;
+  charts[id]=new Chart(ctx,cfg);
+}
+
+/* ══════════════════════════════════════════════════
+   UTILS
+══════════════════════════════════════════════════ */
+const avg = arr => arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0;
+function setText(id,v){ const e=document.getElementById(id); if(e) e.textContent=v; }
+
+function showToast(msg, type='') {
+  const t=document.createElement('div');
+  t.className='toast'+(type?' '+type:'');
+  t.innerHTML=msg;
+  if(type==='err')  t.style.borderColor='var(--red)';
+  if(type==='warn') t.style.borderColor='var(--amber)';
+  document.body.appendChild(t);
+  setTimeout(()=>{ t.style.opacity='0'; t.style.transition='opacity .4s'; setTimeout(()=>t.remove(),400); }, 3500);
+}
+
+function exportCSV() {
+  const recs = getFiltered();
+  if(!recs.length){ showToast('⚠️ Nenhum dado para exportar','warn'); return; }
+  const hdr  = ['id','data','email','cad','turno','area','taxa_%','obs',...ITEM_KEYS];
+  const rows = recs.map(r=>[r.id,r.date,r.email,r.cad||'',r.turno,r.area,Math.round(r.rate*100),(r.obs||'').replace(/,/g,' '),...ITEM_KEYS.map(k=>r.items[k]?1:0)]);
+  const csv  = [hdr,...rows].map(r=>r.join(',')).join('\n');
+  const a    = document.createElement('a');
+  a.href     = 'data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);
+  a.download = `sos_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+}
+
+/* ══════════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════════ */
+loadRecs();
+renderNav('v-login');
+</script>
+</body>
+</html>
