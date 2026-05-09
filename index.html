@@ -116,6 +116,37 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
 .just-counter{font-size:10px;color:var(--t3);text-align:right;margin-top:4px}
 .just-counter.ok{color:var(--green)}
 .cl-err{padding:9px 16px;background:rgba(239,68,68,.1);border-top:1px solid rgba(239,68,68,.2);font-size:11px;color:var(--red);font-weight:700;display:flex;align-items:center;gap:6px}
+
+/* ── Item semanal já cumprido esta semana ── */
+.week-done-bar{
+  padding:11px 16px;background:rgba(34,197,94,.07);
+  border-top:1px solid rgba(34,197,94,.15);
+  display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+}
+.week-done-info{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:var(--green)}
+.week-done-info span{font-weight:400;color:var(--t2)}
+.week-redo-btn{
+  padding:3px 12px;background:transparent;border:1px solid rgba(34,197,94,.35);
+  color:var(--green);border-radius:99px;font-size:10px;font-weight:700;
+  cursor:pointer;font-family:inherit;transition:all .18s;white-space:nowrap;
+}
+.week-redo-btn:hover{background:rgba(34,197,94,.1);}
+
+/* ── OPA progress tracker ── */
+.opa-track{
+  padding:10px 16px 13px;border-top:1px solid var(--b1);
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+}
+.opa-dots{display:flex;gap:5px}
+.opa-dot{
+  width:20px;height:20px;border-radius:50%;
+  background:var(--bg4);border:2px solid var(--b2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:9px;transition:all .2s;
+}
+.opa-dot.done{background:var(--green);border-color:var(--green);color:#fff}
+.opa-label{font-size:11px;font-weight:700;color:var(--t2)}
+.opa-label.full{color:var(--green)}
 .obs-area{width:100%;padding:12px 14px;background:var(--bg3);border:1px solid var(--b1);border-radius:var(--r);color:var(--t1);font-size:13px;font-family:inherit;resize:vertical;min-height:90px;outline:none;transition:border-color .18s,box-shadow .18s}
 .obs-area:focus{border-color:var(--sh);box-shadow:0 0 0 3px var(--sh-glow)}
 .already-done{background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.2);border-radius:var(--r);padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:10px;font-size:13px}
@@ -402,6 +433,7 @@ let allRecords   = []; // dados consolidados (Sheets + local)
 let localRecords = []; // apenas deste navegador
 let charts       = {};
 let itemState    = {};
+let weeklyStatus = {}; // { [key]: { done, count, target, required, lastDate } }
 let dataSource   = 'loading'; // 'sheets' | 'local' | 'loading'
 
 /* ══════════════════════════════════════════════════
@@ -487,6 +519,48 @@ function mergeRecords(sheetsRecs, localRecs) {
   const ids = new Set(sheetsRecs.map(r => r.id));
   const extras = localRecs.filter(r => !ids.has(r.id));
   return [...sheetsRecs, ...extras].sort((a,b) => b.date.localeCompare(a.date));
+}
+
+/* ── Calcula status semanal dos itens semanais para um supervisor ── */
+function calcWeeklyStatus(email) {
+  const now  = new Date();
+  const dow  = now.getDay(); // 0=Dom
+  const diff = dow === 0 ? 6 : dow - 1; // dias desde segunda
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - diff);
+  const mondayStr = monday.toISOString().split('T')[0];
+  const todayStr  = now.toISOString().split('T')[0];
+
+  // Registros desta semana do supervisor (exceto hoje — estamos preenchendo agora)
+  const weekRecs = allRecords.filter(r =>
+    r.email === email &&
+    r.date >= mondayStr &&
+    r.date < todayStr
+  );
+
+  const result = {};
+  WEEK_ITEMS.forEach(it => {
+    const target = it.freq === '4×/semana' ? 4 : 1;
+    const doneRecs = weekRecs.filter(r => r.items?.[it.k] === true)
+                              .sort((a,b) => b.date.localeCompare(a.date));
+    const count = doneRecs.length;
+    result[it.k] = {
+      target,
+      count,
+      required: count < target,
+      lastDate: doneRecs[0]?.date || null,
+    };
+  });
+  return result;
+}
+
+/* ── Formata data YYYY-MM-DD → "seg, 12/05" ── */
+function fmtDate(dateStr) {
+  if (!dateStr) return '';
+  const [y,m,d] = dateStr.split('-');
+  const dt  = new Date(+y, +m-1, +d);
+  const day = ['dom','seg','ter','qua','qui','sex','sáb'][dt.getDay()];
+  return `${day}, ${d}/${m}`;
 }
 
 /* ══════════════════════════════════════════════════
@@ -606,7 +680,16 @@ function buildForm() {
   document.getElementById('already-msg').innerHTML=ex
     ?`<div class="already-done"><div class="dot-live"></div><span>Você já preencheu hoje. Pode atualizar o registro abaixo.</span></div>`:'';
   itemState={};
-  ITEMS.forEach(it=>{ itemState[it.k]={status:null,hasFile:false,justText:''}; });
+  ITEMS.forEach(it=>{ itemState[it.k]={status:null,hasFile:false,justText:'',preCompleted:false}; });
+
+  // Calcula status semanal e pré-completa itens já cumpridos esta semana
+  weeklyStatus = calcWeeklyStatus(email);
+  WEEK_ITEMS.forEach(it => {
+    const ws = weeklyStatus[it.k];
+    if (ws && !ws.required) {
+      itemState[it.k] = {status:'realizado', hasFile:false, justText:'', preCompleted:true};
+    }
+  });
   document.getElementById('val-banner').classList.remove('show');
   document.getElementById('obs').value='';
   renderSection('cl-daily', DAILY_ITEMS);
@@ -614,10 +697,69 @@ function buildForm() {
   updateProgress();
 }
 
-function renderSection(cid,items) {
-  document.getElementById(cid).innerHTML=items.map(it=>{
-    const link=it.link?`<a href="${it.link}" target="_blank" class="item-link" onclick="event.stopPropagation()">🔗 Abrir formulário</a>`:'';
-    const hint=it.proofHint||'Anexe o comprovante de realização';
+function renderSection(cid, items) {
+  document.getElementById(cid).innerHTML = items.map(it => {
+    const link = it.link
+      ? `<a href="${it.link}" target="_blank" class="item-link" onclick="event.stopPropagation()">🔗 Abrir formulário</a>`
+      : '';
+    const hint = it.proofHint || 'Anexe o comprovante de realização';
+    const ws   = weeklyStatus[it.k]; // status semanal (só existe para itens semanais)
+    const pre  = itemState[it.k]?.preCompleted;
+
+    // ── Card já cumprido esta semana (pré-completado) ──────────────────
+    if (pre) {
+      const label4x = ws.target === 4
+        ? `${ws.count} de ${ws.target} realizados esta semana`
+        : `Realizado em ${fmtDate(ws.lastDate)}`;
+      return `
+      <div class="cl-card done-real" id="card-${it.k}">
+        <div class="cl-card-head">
+          <div class="cl-ico">${it.ico}</div>
+          <div class="cl-card-body">
+            <div class="cl-card-name">${it.lbl}</div>
+            <div class="cl-card-meta"><span class="freq-tag">${it.freq}</span>${link}</div>
+          </div>
+          <div class="cl-status-badge badge-real visible">✅ Cumprido esta semana</div>
+        </div>
+        <div class="week-done-bar">
+          <div class="week-done-info">
+            ✅ ${label4x}
+            <span>· Não é obrigatório registrar novamente esta semana</span>
+          </div>
+          <button class="week-redo-btn" onclick="overrideWeekly('${it.k}')">Registrar novamente</button>
+        </div>
+        <div id="override-${it.k}" style="display:none">
+          <div class="cl-btns">
+            <button class="sbtn sbtn-real" id="sbtn-real-${it.k}" onclick="setStatus('${it.k}','realizado')">✅ Realizado</button>
+            <button class="sbtn sbtn-nao"  id="sbtn-nao-${it.k}"  onclick="setStatus('${it.k}','nao')">❌ Não Realizado</button>
+          </div>
+          <div class="proof-wrap" id="proof-${it.k}" style="display:none">
+            <div class="proof-label">📎 ${hint} <span class="req-star">*</span></div>
+            <label class="upload-btn-cl" id="upload-lbl-${it.k}" for="file-${it.k}">📂 Clique para anexar imagem ou PDF</label>
+            <input type="file" id="file-${it.k}" accept="image/*,application/pdf" style="display:none" onchange="handleFile(this,'${it.k}')">
+            <div id="preview-${it.k}" class="file-preview"></div>
+          </div>
+          <div class="just-wrap" id="just-wrap-${it.k}" style="display:none">
+            <div class="proof-label">📝 Justifique o não cumprimento <span class="req-star">*</span></div>
+            <textarea class="just-area" id="just-${it.k}" rows="2" placeholder="Descreva o motivo (mínimo 10 caracteres)…" oninput="handleJust('${it.k}')"></textarea>
+            <div class="just-counter" id="jcnt-${it.k}">0 / 10 mínimos</div>
+          </div>
+        </div>
+        <div class="cl-err" id="err-${it.k}" style="display:none"></div>
+      </div>`;
+    }
+
+    // ── Card OPA com progresso parcial ──────────────────────────────────
+    const opaTrack = (ws && ws.target === 4 && ws.count > 0 && ws.required)
+      ? `<div class="opa-track">
+          <div class="opa-dots">
+            ${[...Array(4)].map((_,i)=>`<div class="opa-dot${i<ws.count?' done':''}">
+              ${i<ws.count?'✓':''}</div>`).join('')}
+          </div>
+          <span class="opa-label">${ws.count} de 4 realizados esta semana — faltam ${4-ws.count}</span>
+        </div>` : '';
+
+    // ── Card normal ─────────────────────────────────────────────────────
     return `
     <div class="cl-card" id="card-${it.k}">
       <div class="cl-card-head">
@@ -628,6 +770,7 @@ function renderSection(cid,items) {
         </div>
         <div class="cl-status-badge" id="badge-${it.k}"></div>
       </div>
+      ${opaTrack}
       <div class="cl-btns">
         <button class="sbtn sbtn-real" id="sbtn-real-${it.k}" onclick="setStatus('${it.k}','realizado')">✅ Realizado</button>
         <button class="sbtn sbtn-nao"  id="sbtn-nao-${it.k}"  onclick="setStatus('${it.k}','nao')">❌ Não Realizado</button>
@@ -646,6 +789,19 @@ function renderSection(cid,items) {
       <div class="cl-err" id="err-${it.k}" style="display:none"></div>
     </div>`;
   }).join('');
+}
+
+/* ── Permite ao supervisor registrar novamente um item já cumprido ── */
+function overrideWeekly(key) {
+  itemState[key].preCompleted = false;
+  itemState[key].status       = null;
+  const ovr = document.getElementById('override-'+key);
+  if (ovr) ovr.style.display = 'block';
+  // Remove badge e estilo de concluído
+  const badge = document.getElementById('badge-'+key);
+  if (badge) { badge.className = 'cl-status-badge'; badge.textContent = ''; }
+  document.getElementById('card-'+key).classList.remove('done-real');
+  updateProgress();
 }
 
 function setStatus(key,status) {
@@ -687,12 +843,15 @@ function handleJust(key) {
 }
 
 function isComplete(key) {
-  const s=itemState[key]; if(!s.status) return false;
+  const s=itemState[key];
+  if(!s.status) return false;
+  if(s.preCompleted) return true; // já cumprido esta semana — não precisa de prova nova
   return s.status==='realizado'?s.hasFile:s.justText.length>=10;
 }
 function refreshCard(key) {
   const card=document.getElementById('card-'+key),s=itemState[key];
   card.classList.remove('done-real','done-nao');
+  if(s.preCompleted){card.classList.add('done-real');return;}
   if(s.status&&isComplete(key)) card.classList.add(s.status==='realizado'?'done-real':'done-nao');
 }
 function clearErr(key) {
